@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Focal Operations — Complete Filter Guide</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
+
+        :root {
+            --bg: #05080d;
+            --bg2: #081521;
+            --panel: #0a1726;
+            --grid-line: rgba(79, 209, 255, 0.08);
+            --blue-deep: #0a2a4a;
+            --blue-mid: #15446e;
+            --cyan: #5fd4ff;
+            --cyan-dim: #2c7ea3;
+            --ink: #e7eef6;
+            --slate: #7c93ab;
+            --slate-dim: #48586c;
+            --card-radius: 8px;
+            --orange: #ff8f6b;
+            --green: #6bcf97;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: radial-gradient(ellipse 1600px 1000px at 50% -10%, var(--bg2), var(--bg) 60%);
+            font-family: 'Inter', sans-serif;
+            color: var(--ink);
+            width: 1300px;
+            margin: 0 auto;
+            position: relative;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .sheet {
+            position: relative;
+            z-index: 1;
+            padding: 40px 50px 30px;
+        }
+
+        /* ===== TITLE ===== */
+        .titleblock {
+            border-bottom: 1px solid var(--blue-mid);
+            padding-bottom: 20px;
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .eyebrow {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 0.28em;
+            color: var(--cyan);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 48px;
+            line-height: 1.02;
+            letter-spacing: -0.01em;
+            color: var(--ink);
+        }
+        h1 span {
+            color: var(--cyan);
+        }
+        .subhead {
+            font-size: 14px;
+            color: var(--slate);
+            max-width: 550px;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+        .coords {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--slate-dim);
+            text-align: right;
+            line-height: 1.9;
+            flex-shrink: 0;
+        }
+        .coords b {
+            color: var(--cyan-dim);
+        }
+
+        /* ===== MECHANISM ===== */
+        .mechanism {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: linear-gradient(90deg, var(--panel), transparent);
+            border: 1px solid var(--blue-mid);
+            border-radius: 6px;
+            padding: 14px 24px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+        .kernel-icon {
+            display: grid;
+            grid-template-columns: repeat(3, 24px);
+            grid-template-rows: repeat(3, 24px);
+            gap: 2px;
+            flex-shrink: 0;
+        }
+        .kernel-icon div {
+            background: var(--blue-deep);
+            border: 1px solid var(--blue-mid);
+            border-radius: 2px;
+        }
+        .kernel-icon div.center {
+            background: var(--cyan);
+            box-shadow: 0 0 14px rgba(95, 212, 255, 0.6);
+        }
+        .mech-arrow {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--cyan-dim);
+            font-size: 18px;
+        }
+        .mech-text {
+            font-size: 13px;
+            color: var(--slate);
+            line-height: 1.6;
+        }
+        .mech-text b {
+            color: var(--ink);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            display: block;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+        .mech-text .badge {
+            display: inline-block;
+            background: var(--blue-deep);
+            border: 1px solid var(--cyan-dim);
+            border-radius: 3px;
+            padding: 0 10px;
+            font-size: 11px;
+            color: var(--cyan);
+            font-family: 'JetBrains Mono', monospace;
+            margin-right: 4px;
+        }
+
+        /* ===== LAYOUT ===== */
+        .interactive-area {
+            display: flex;
+            gap: 28px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        /* ===== GRID ===== */
+        .grid-container {
+            flex: 0 0 auto;
+            background: var(--panel);
+            border: 1px solid var(--blue-mid);
+            border-radius: var(--card-radius);
+            padding: 16px 18px 14px;
+        }
+        .grid-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .grid-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 0.12em;
+            color: var(--slate-dim);
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .raster-grid {
+            display: grid;
+            gap: 2px;
+            user-select: none;
+        }
+        .cell {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+            border: 2px solid transparent;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+        }
+        .cell:hover {
+            transform: scale(1.06);
+            z-index: 2;
+            border-color: var(--cyan);
+            box-shadow: 0 0 20px rgba(95, 212, 255, 0.25);
+        }
+        .cell.selected {
+            border-color: #fff;
+            box-shadow: 0 0 0 2px var(--cyan), 0 0 28px rgba(95, 212, 255, 0.35);
+            transform: scale(1.04);
+            z-index: 3;
+        }
+        .cell.in-neighborhood {
+            border-color: var(--cyan-dim);
+            box-shadow: inset 0 0 12px rgba(95, 212, 255, 0.15);
+        }
+        .cell.border-cell {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+        .cell.border-cell:hover {
+            transform: none;
+            border-color: transparent;
+            box-shadow: none;
+        }
+        .cell .cell-value {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .cell-val-0 {
+            background: #0a1a2e;
+        }
+        .cell-val-1 {
+            background: #0d2642;
+        }
+        .cell-val-2 {
+            background: #12365a;
+        }
+        .cell-val-3 {
+            background: #1a4a72;
+        }
+        .cell-val-4 {
+            background: #23608a;
+        }
+        .cell-val-5 {
+            background: #2e78a2;
+        }
+        .cell-val-6 {
+            background: #3a92b8;
+        }
+        .cell-val-7 {
+            background: #4aaccc;
+        }
+        .cell-val-8 {
+            background: #5cc4e0;
+        }
+        .cell-val-9 {
+            background: #7ed6ee;
+        }
+        .cell-val-10 {
+            background: #a6e6f7;
+            color: #0a1a2e;
+            text-shadow: none;
+        }
+        .cell.border-cell {
+            background: #0a0f18 !important;
+            color: var(--slate-dim);
+            text-shadow: none;
+        }
+
+        .grid-legend {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            color: var(--slate-dim);
+        }
+        .grid-legend span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .grid-legend .dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+        .dot.cyan {
+            background: var(--cyan);
+        }
+        .dot.outline {
+            border: 1px solid var(--cyan-dim);
+            background: transparent;
+        }
+
+        /* ===== CONTROLS ===== */
+        .controls-panel {
+            flex: 1;
+            min-width: 300px;
+            background: var(--panel);
+            border: 1px solid var(--blue-mid);
+            border-radius: var(--card-radius);
+            padding: 18px 22px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .panel-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 17px;
+            color: var(--ink);
+            letter-spacing: -0.01em;
+            border-bottom: 1px solid var(--blue-mid);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .panel-title small {
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            font-size: 12px;
+            color: var(--slate);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 5px;
+        }
+        .filter-btn {
+            background: var(--blue-deep);
+            border: 1px solid var(--blue-mid);
+            border-radius: 4px;
+            padding: 5px 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--slate);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+            line-height: 1.3;
+            letter-spacing: 0.02em;
+        }
+        .filter-btn:hover {
+            border-color: var(--cyan-dim);
+            color: var(--ink);
+        }
+        .filter-btn.active {
+            background: var(--cyan);
+            border-color: var(--cyan);
+            color: #05080d;
+            box-shadow: 0 0 20px rgba(95, 212, 255, 0.2);
+        }
+
+        /* kernel display */
+        .kernel-display {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            background: rgba(5, 8, 13, 0.5);
+            border-radius: 6px;
+            padding: 10px 16px;
+            border: 1px solid var(--blue-mid);
+        }
+        .kernel-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 34px);
+            grid-template-rows: repeat(3, 34px);
+            gap: 2px;
+            flex-shrink: 0;
+        }
+        .kernel-grid .kcell {
+            background: var(--blue-deep);
+            border: 1px solid var(--blue-mid);
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--slate);
+            transition: background 0.2s;
+        }
+        .kernel-grid .kcell.center-k {
+            background: var(--cyan);
+            color: #05080d;
+            font-weight: 700;
+            border-color: var(--cyan);
+            box-shadow: 0 0 12px rgba(95, 212, 255, 0.3);
+        }
+        .kernel-grid .kcell.weighted {
+            background: var(--blue-mid);
+            color: var(--ink);
+        }
+        .kernel-grid .kcell.zero-k {
+            background: #0a121f;
+            color: var(--slate-dim);
+        }
+        .kernel-info {
+            font-size: 12px;
+            color: var(--slate);
+            line-height: 1.5;
+        }
+        .kernel-info strong {
+            color: var(--ink);
+        }
+        .kernel-info .op-name {
+            color: var(--cyan);
+            font-weight: 600;
+        }
+
+        /* result */
+        .result-box {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(5, 8, 13, 0.4);
+            border-radius: 6px;
+            padding: 10px 16px;
+            border: 1px solid var(--blue-mid);
+            min-height: 56px;
+        }
+        .result-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 0.1em;
+            color: var(--slate-dim);
+            text-transform: uppercase;
+        }
+        .result-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--cyan);
+            line-height: 1;
+        }
+        .result-detail {
+            font-size: 12px;
+            color: var(--slate);
+            line-height: 1.5;
+            flex: 1;
+        }
+        .result-detail .highlight {
+            color: var(--ink);
+            font-weight: 500;
+        }
+        .result-empty {
+            color: var(--slate-dim);
+            font-size: 13px;
+        }
+
+        .neighbor-values {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            margin-top: 3px;
+        }
+        .neighbor-values .nval {
+            background: var(--blue-deep);
+            border: 1px solid var(--blue-mid);
+            border-radius: 3px;
+            padding: 1px 7px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--slate);
+        }
+        .neighbor-values .nval.center-n {
+            background: var(--cyan);
+            color: #05080d;
+            font-weight: 700;
+            border-color: var(--cyan);
+        }
+
+        /* ===== MATRIX WORK ===== */
+        .matrix-work {
+            background: var(--panel);
+            border: 1px solid var(--blue-mid);
+            border-radius: var(--card-radius);
+            padding: 18px 24px 22px;
+            margin-bottom: 20px;
+        }
+        .matrix-work .mw-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--ink);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .matrix-work .mw-title small {
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            font-size: 12px;
+            color: var(--slate);
+        }
+        .mw-layout {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px 28px;
+        }
+        .mw-matrix {
+            display: inline-block;
+        }
+        .mw-matrix .mw-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 0.08em;
+            color: var(--slate-dim);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+        .mw-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 42px);
+            grid-template-rows: repeat(3, 42px);
+            gap: 2px;
+            background: rgba(5, 8, 13, 0.3);
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid var(--blue-mid);
+        }
+        .mw-grid .mw-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+            background: var(--blue-deep);
+            border-radius: 3px;
+            color: var(--ink);
+            transition: all 0.1s;
+            border: 1px solid transparent;
+        }
+        .mw-grid .mw-cell.center-mw {
+            background: var(--cyan);
+            color: #05080d;
+            border-color: var(--cyan);
+            box-shadow: 0 0 12px rgba(95, 212, 255, 0.25);
+        }
+        .mw-grid .mw-cell.weight-mw {
+            background: var(--blue-mid);
+            color: var(--ink);
+        }
+        .mw-grid .mw-cell.zero-mw {
+            background: #0a121f;
+            color: var(--slate-dim);
+        }
+        .mw-grid .mw-cell.highlight-mw {
+            background: var(--orange);
+            color: #05080d;
+        }
+        .mw-grid .mw-cell.green-mw {
+            background: var(--green);
+            color: #05080d;
+        }
+        .mw-arrow {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            color: var(--cyan-dim);
+            align-self: center;
+        }
+        .mw-op-block {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: rgba(5, 8, 13, 0.3);
+            padding: 10px 16px;
+            border-radius: 6px;
+            border-left: 3px solid var(--cyan-dim);
+            min-width: 160px;
+            flex: 1;
+        }
+        .mw-op-block .op-line {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--slate);
+            line-height: 1.7;
+        }
+        .mw-op-block .op-line .hl {
+            color: var(--cyan);
+            font-weight: 600;
+        }
+        .mw-op-block .op-line .dim {
+            color: var(--slate-dim);
+        }
+        .mw-op-block .op-line .hl-orange {
+            color: var(--orange);
+            font-weight: 600;
+        }
+        .mw-op-block .op-line .hl-green {
+            color: var(--green);
+            font-weight: 600;
+        }
+        .mw-result-highlight {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--cyan);
+            font-family: 'Space Grotesk', sans-serif;
+            padding-left: 4px;
+        }
+
+        /* ===== FILTER EXPLANATION ===== */
+        .filter-explanation {
+            background: var(--panel);
+            border: 1px solid var(--blue-mid);
+            border-radius: var(--card-radius);
+            padding: 18px 24px 20px;
+            margin-bottom: 20px;
+        }
+        .filter-explanation .fe-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--ink);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .filter-explanation .fe-title .tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 0.08em;
+            color: var(--cyan);
+            border: 1px solid var(--cyan-dim);
+            padding: 2px 10px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+        .filter-explanation .fe-body {
+            font-size: 13px;
+            color: var(--slate);
+            line-height: 1.7;
+        }
+        .filter-explanation .fe-body .hl {
+            color: var(--cyan);
+            font-weight: 500;
+        }
+        .filter-explanation .fe-body .hl-orange {
+            color: var(--orange);
+            font-weight: 500;
+        }
+        .filter-explanation .fe-body .hl-green {
+            color: var(--green);
+            font-weight: 500;
+        }
+        .filter-explanation .fe-body .use-tag {
+            display: inline-block;
+            background: var(--blue-deep);
+            border: 1px solid var(--blue-mid);
+            border-radius: 3px;
+            padding: 0 10px;
+            font-size: 11px;
+            color: var(--slate-dim);
+            font-family: 'JetBrains Mono', monospace;
+            margin-right: 4px;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            border-top: 1px solid var(--blue-mid);
+            padding-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .footer .f-left {
+            display: flex;
+            gap: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--slate-dim);
+        }
+        .footer .f-left span b {
+            color: var(--cyan-dim);
+        }
+        .footer .f-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            color: var(--slate-dim);
+        }
+        .footer .f-right .bar {
+            width: 80px;
+            height: 5px;
+            background: repeating-linear-gradient(90deg, var(--cyan-dim) 0 10px, transparent 10px 20px);
+            border: 1px solid var(--blue-mid);
+            border-radius: 2px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            body {
+                width: 100%;
+                padding: 0 12px;
+            }
+            .sheet {
+                padding: 28px 16px 24px;
+            }
+            .interactive-area {
+                flex-direction: column;
+            }
+            .controls-panel {
+                min-width: 0;
+            }
+            .cell {
+                width: 38px;
+                height: 38px;
+                font-size: 11px;
+            }
+            .cell .cell-value {
+                font-size: 11px;
+            }
+            .raster-grid {
+                gap: 2px;
+            }
+            h1 {
+                font-size: 36px;
+            }
+            .coords {
+                text-align: left;
+                width: 100%;
+            }
+            .titleblock {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .mw-grid {
+                grid-template-columns: repeat(3, 34px);
+                grid-template-rows: repeat(3, 34px);
+            }
+            .mw-grid .mw-cell {
+                font-size: 11px;
+            }
+            .mw-layout {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            .mw-arrow {
+                transform: rotate(90deg);
+                align-self: center;
+            }
+            .filter-grid {
+                grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            }
+        }
+        @media (max-width: 500px) {
+            .cell {
+                width: 28px;
+                height: 28px;
+                font-size: 9px;
+            }
+            .cell .cell-value {
+                font-size: 9px;
+            }
+            .raster-grid {
+                gap: 1.5px;
+            }
+            .grid-container {
+                padding: 10px;
+            }
+            .mw-grid {
+                grid-template-columns: repeat(3, 28px);
+                grid-template-rows: repeat(3, 28px);
+            }
+            .mw-grid .mw-cell {
+                font-size: 9px;
+            }
+            .result-value {
+                font-size: 20px;
+            }
+            .mechanism {
+                padding: 12px 16px;
+                gap: 12px;
+            }
+            .filter-btn {
+                font-size: 9px;
+                padding: 4px 6px;
+            }
+            .controls-panel {
+                padding: 12px 14px;
+            }
+            h1 {
+                font-size: 28px;
+            }
+            .sheet {
+                padding: 16px 10px 16px;
+            }
+            .kernel-grid {
+                grid-template-columns: repeat(3, 26px);
+                grid-template-rows: repeat(3, 26px);
+            }
+            .kernel-grid .kcell {
+                font-size: 9px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sheet">
+
+        <!-- ===== TITLE ===== -->
+        <div class="titleblock">
+            <div>
+                <div class="eyebrow">Spatial Analysis · Focal Operations</div>
+                <h1>FILTER <span>GUIDE</span></h1>
+                <div class="subhead">
+                    <strong style="color:var(--ink);">Click any cell</strong> on the raster to see how <strong style="color:var(--cyan);">11 different filters</strong> compute a new value from the 3x3 neighborhood. Watch the matrix math unfold.
+                </div>
+            </div>
+            <div class="coords">
+                WINDOW: <b>3x3</b><br>
+                GRID: <b>7x7 DEM</b><br>
+                FILTERS: <b>11 types</b><br>
+                REF: <b>GIS-FO-ALL</b>
+            </div>
+        </div>
+
+        <!-- ===== MECHANISM ===== -->
+        <div class="mechanism">
+            <div class="kernel-icon">
+                <div></div><div></div><div></div>
+                <div></div><div class="center"></div><div></div>
+                <div></div><div></div><div></div>
+            </div>
+            <div class="mech-arrow">-></div>
+            <div class="mech-text">
+                <b>HOW FOCAL FILTERS WORK</b>
+                A <span class="badge">3x3</span> moving window slides across the raster. At each stop, the <span style="color:var(--cyan);">center cell</span> is recalculated using its 8 neighbors.
+                Select a filter below, then click any <span style="color:var(--cyan);">interior cell</span> to see the full calculation.
+            </div>
+        </div>
+
+        <!-- ===== INTERACTIVE AREA ===== -->
+        <div class="interactive-area">
+
+            <!-- GRID -->
+            <div class="grid-container">
+                <div class="grid-label">Raster Grid (elevation values 0-10)</div>
+                <div class="grid-wrapper">
+                    <div class="raster-grid" id="rasterGrid"></div>
+                </div>
+                <div class="grid-legend">
+                    <span><span class="dot cyan"></span> selected cell</span>
+                    <span><span class="dot outline"></span> neighborhood</span>
+                    <span style="color:var(--slate-dim);">click an interior cell</span>
+                </div>
+            </div>
+
+            <!-- CONTROLS -->
+            <div class="controls-panel">
+                <div class="panel-title">
+                    Select a Filter
+                    <small>11 operations</small>
+                </div>
+
+                <div class="filter-grid" id="filterGrid">
+                    <button class="filter-btn active" data-filter="mean">Mean</button>
+                    <button class="filter-btn" data-filter="median">Median</button>
+                    <button class="filter-btn" data-filter="max">Max</button>
+                    <button class="filter-btn" data-filter="min">Min</button>
+                    <button class="filter-btn" data-filter="range">Range</button>
+                    <button class="filter-btn" data-filter="stddev">StdDev</button>
+                    <button class="filter-btn" data-filter="majority">Majority</button>
+                    <button class="filter-btn" data-filter="minority">Minority</button>
+                    <button class="filter-btn" data-filter="edge">Edge</button>
+                    <button class="filter-btn" data-filter="highpass">High-Pass</button>
+                    <button class="filter-btn" data-filter="lowpass">Low-Pass</button>
+                </div>
+
+                <!-- Kernel display -->
+                <div class="kernel-display">
+                    <div class="kernel-grid" id="kernelGrid"></div>
+                    <div class="kernel-info">
+                        <strong id="kernelName">Mean Filter</strong><br>
+                        <span id="kernelDescription">Uniform weights — average of all 9 cells</span>
+                        <div style="font-size:10px;color:var(--slate-dim);margin-top:2px;">
+                            <span style="color:var(--cyan);">■</span> center
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Result -->
+                <div class="result-box" id="resultBox">
+                    <div>
+                        <div class="result-label">Result</div>
+                        <div class="result-value" id="resultValue">—</div>
+                    </div>
+                    <div class="result-detail" id="resultDetail">
+                        <span class="result-empty">Click a cell on the grid.</span>
+                    </div>
+                </div>
+
+                <!-- Neighborhood -->
+                <div style="font-size:11px;color:var(--slate-dim);">
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;">Neighborhood values</span>
+                    <div class="neighbor-values" id="neighborValues">
+                        <span style="color:var(--slate-dim);font-size:12px;">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== MATRIX WORK ===== -->
+        <div class="matrix-work" id="matrixWork">
+            <div class="mw-title">
+                Step-by-Step Matrix Computation
+                <small>neighborhood · kernel · operation -> result</small>
+            </div>
+            <div id="matrixWorkContent">
+                <div style="color:var(--slate-dim);font-size:13px;padding:6px 0;">
+                    Click an interior cell to see the full matrix calculation for the selected filter.
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== FILTER EXPLANATION ===== -->
+        <div class="filter-explanation" id="filterExplanation">
+            <div class="fe-title" id="feTitle">
+                Filter Deep Dive
+                <span class="tag" id="feTag">Mean</span>
+            </div>
+            <div class="fe-body" id="feBody">
+                <span style="color:var(--slate-dim);">Select a filter and click a cell to see the detailed explanation.</span>
+            </div>
+        </div>
+
+        <!-- ===== FOOTER ===== -->
+        <div class="footer">
+            <div class="f-left">
+                <span><b>USE·01</b> Smoothing</span>
+                <span><b>USE·02</b> Noise Removal</span>
+                <span><b>USE·03</b> Edge Detection</span>
+                <span><b>USE·04</b> Terrain Analysis</span>
+            </div>
+            <div class="f-right">
+                <span>WINDOW</span>
+                <div class="bar"></div>
+                <span>3x3</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ─────────────────────────────────────────────────────────────────────
+        //  DATA — 7x7 synthetic DEM with some variation
+        // ─────────────────────────────────────────────────────────────────────
+        const GRID = [
+            [1, 1, 2, 3, 2, 1, 1],
+            [1, 2, 3, 4, 3, 2, 1],
+            [2, 3, 5, 6, 5, 3, 2],
+            [3, 4, 6, 9, 6, 4, 3],
+            [2, 3, 5, 6, 5, 3, 2],
+            [1, 2, 3, 4, 3, 2, 1],
+            [1, 1, 2, 3, 2, 1, 1]
+        ];
+        const ROWS = GRID.length;
+        const COLS = GRID[0].length;
+
+        // ─────────────────────────────────────────────────────────────────────
+        //  FILTER DEFINITIONS — full metadata for each operation
+        // ─────────────────────────────────────────────────────────────────────
+        const FILTERS = {
+            mean: {
+                label: 'Mean Filter',
+                tag: 'Smoothing',
+                desc: 'Averages all values in the neighborhood. Removes random noise and produces a smooth surface.',
+                use: 'Noise reduction, image smoothing, pre-processing for classification.',
+                weights: [
+                    [1, 1, 1],
+                    [1, 1, 1],
+                    [1, 1, 1]
+                ],
+                compute: (n) => {
+                    const vals = n.flat();
+                    return +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
+                },
+                explain: (n, result) => {
+                    const vals = n.flat();
+                    const sum = vals.reduce((a, b) => a + b, 0);
+                    const len = vals.length;
+                    return `1. Sum = ${sum} &nbsp; 2. Divide by ${len} &nbsp; 3. <span class="hl">${sum} / ${len} = ${result}</span>`;
+                },
+                matrixDetail: (n, result) => {
+                    const vals = n.flat();
+                    const sum = vals.reduce((a, b) => a + b, 0);
+                    const len = vals.length;
+                    return {
+                        steps: [
+                            `Sum of all 9 values = <span class="hl">${sum}</span>`,
+                            `Divide by number of cells: ${sum} / ${len}`,
+                            `Result = <span class="hl">${result}</span> (smoothed value)`
+                        ]
+                    };
+                },
+                longDesc: `The <strong>Mean Filter</strong> replaces each cell with the average of its 3x3 neighborhood. It is the simplest smoothing operation in raster analysis. By averaging, it reduces random noise and creates a more generalized surface. However, it also blurs edges and can erase fine detail. Use it when you want to remove high-frequency noise before further analysis.`
+            },
+            median: {
+                label: 'Median Filter',
+                tag: 'Noise Removal',
+                desc: 'Takes the middle value after sorting the neighborhood. Excellent for removing salt-and-pepper noise.',
+                use: 'Speckle removal, image restoration, preserving edges while denoising.',
+                weights: [
+                    [1, 1, 1],
+                    [1, 1, 1],
+                    [1, 1, 1]
+                ],
+                compute: (n) => {
+                    const vals = n.flat().slice().sort((a, b) => a - b);
+                    return vals[Math.floor(vals.length / 2)];
+                },
+                explain: (n, result) => {
+                    const sorted = n.flat().slice().sort((a, b) => a - b);
+                    return `1. Sort -> [${sorted.join(', ')}] &nbsp; 2. Middle = <span class="hl">${result}</span>`;
+                },
+                matrixDetail: (n, result) => {
+                    const sorted = n.flat().slice().sort((a, b) => a - b);
+                    const mid = Math.floor(sorted.length / 2);
+                    return {
+                        steps: [
+                            `Flatten & sort: [${sorted.join(', ')}]`,
+                            `Middle position = index ${mid}`,
+                            `Result = <span class="hl">${sorted[mid]}</span> (robust to outliers)`
+                        ]
+                    };
+                },
+                longDesc: `The <strong>Median Filter</strong> replaces each cell with the median value of its neighborhood. It is particularly effective at removing <span class="hl-orange">salt-and-pepper noise</span> (extreme isolated values) while preserving edges much better than the mean filter. Unlike the mean, the median is not influenced by extreme outliers, making it ideal for cleaning classified images or DEMs with spikes.`
+            },
+            max: {
+                label: 'Max Filter',
+                tag: 'Peak Enhancement',
+                desc: 'Picks the highest value in the neighborhood. Expands bright / high areas.',
+                use: 'Peak detection, morphological dilation, highlighting local maxima.',
+                weights: [
+                    [1, 1, 1],
+                    [1, 1, 1],
+                    [1, 1, 1]
+                ],
+                compute: (n) => {
+                    return Math.max(...n.flat());
+                },
+                explain: (n, result) => {
+                    const vals = n.flat();
+                    return `1. Values: [${vals.join(', ')}] &nbsp; 2. Max = <span class="hl">${result}</span>`;
+                },
+                matrixDetail: (n, result) => {
+                    const vals = n.flat();
+                    return {
+                        steps: [
+                            `Neighborhood values: [${vals.join(', ')}]`,
+                            `Find the maximum value`,
+                            `Result = <span class="hl">${result}</span> (highest in window)`
+                        ]
+                    };
+                },
+                longDesc: `The <strong>Max Filter</strong> replaces each cell with the maximum value in its neighborhood. It <span class="hl-orange">enhances bright or high-value features</span> and expands them spatially (similar to morphological dilation). Useful for detecting peaks, ridge lines, or bright objects in imagery. It can also be used to fill small gaps in high-value features.`
+            },
+            min: {
+                label: 'Min Filter',
+                tag: 'Valley Enhancement',
+                desc: 'Picks the lowest value in the neighborhood. Highlights dark / low areas.',
+                use: 'Valley detection, morphological erosion, finding local minima.',
+                weights: [
+                    [1, 1, 1],
+                    [1, 1, 1],
+                    [1, 1, 1]
+                ],
+                compute: (n) => {
+                    return Math.min(...n.flat());
+                },
+                explain: (n, result) => {
+                    const vals = n.flat();
+                    return `1. Values: [${vals.join(', ')}] &nbsp; 2. Min = <span class="hl">${result}</span>`;
+                },
+                matrixDetail: (n, result) => {
+                    const vals = n.flat();
+                    return {
+                        steps: [
+                            `Neighborhood values: [${vals.join(', ')}]`,
+                            `Find the minimum value`,
+                            `Result = <span class="hl">${result}</span> (lowest in window)`
+                        ]
+                    };
+                },
+                longDesc: `The <strong>Min Filter</strong> replaces each cell with the minimum value in its neighborhood. It <span class="hl-orange">enhances low or dark features</span> and shrinks bright areas (morphological erosion). Useful for detecting valleys, depressions, or dark objects in imagery. In hydrology, it helps identify low-flow paths and sinks.`
+            },
+            range: {
+                label: 'Range Filter',
+                tag: 'Variation',
+                desc: 'Computes the difference between max and min. Shows local variation or roughness.',
+                use: 'Texture analysis, roughness mapping, urban vs. natural detection.',
+                weights: [
+                    [1, 1, 1],
+                    [1, 1, 1],
+                    [1, 1, 1]
+                ],
+                compute: (n) => {
+                    const vals = n.flat();
+                    return Math.max(...vals) - Math.min(...vals);
+                },
+                explain: (n, result) => {
+                    const vals = n.flat();
+                    const mx = Math.max(...vals);
+                    const mn = Math.min(...vals);
+                    return `1. Max = ${mx}, Min = ${mn} &nbsp; 2. Range = ${mx} - ${mn} = <span class="hl">${result}</span>`;
+                },
+                matrixDetail: (n, result) => {
+                    const vals = n.flat();
+                    const mx = Math.max(...vals);
+                    const mn = Math.min(...vals);
+                    return {
+                        steps: [
+                            `Max = ${mx}, Min = ${mn}`,
+                            `Range = ${mx} - ${mn}`,
+                            `Result = <span class="hl">${result}</span> (high = rough terrain)`
+                        ]
+                    };
+                },
+                longDesc: `The <strong>Range Filter</strong> calculates the difference between the maximum and minimum values in the neighborhood. It measures <span class="hl-orange">local variation or roughness</span>. High range values indicate heterogeneous areas (urban, forest edges, cliffs), while low values indicate homogeneous areas (water, flat plains). Used in texture analysis and land-cover segmentation.`
+            },
+            stddev: {
+                label: 'Std Deviation',
+                tag: 'Texture',
+                desc: 'Measures how much values deviate from the mean. Detects texture changes.',
+                use: 'Texture mapping, urban vs. rural classification, change detection.',
+                weights: [
+                    [1, 1, 1],
+                    [1, 1, 1],
+                    [1, 1, 1]
+                ],
+                compute: (n) => {
+                    const vals = n.flat();
+                    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+                    const sqDiffs = vals.map(v => (v - mean) ** 2);
+                    return +Math.sqrt(sqDiffs.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
+                },
+                explain: (n, result) => {
+                    const vals = n.flat();
+                    const mean = +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
+                    return `1. Mean = ${mean} &nbsp; 2. Variance -> 3. StdDev = <span class="hl">${result}</span>`;
+                },
+                matrixDetail: (n, result) => {
+                    const vals = n.flat();
+                    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+                    const sqDiffs = vals.map(v => (v - mean) ** 2);
+                    const variance = sqDiffs.reduce((a, b) => a + b, 0) / vals.length;
+                    return {
+                        steps: [
+                            `Mean = ${mean.toFixed(2)}`,
+                            `Sum of squared differences = ${sqDiffs.map(d=>d.toFixed(2)).join(' + ')} = ${sqDiffs.reduce((a,b)=>a+b,0).toFixed(2)}`,
+                            `Variance = ${variance.toFixed(2)}, StdDev = sqrt(${variance.toFixed(2)}) = <span class="hl">${result}</span>`
+                        ]
+                    };
+                },
+                longDesc: `The <strong>Standard Deviation Filter</strong> measures the spread of values around the mean in the neighborhood. <span class="hl-orange">High standard deviation</span> indicates a heterogeneous, textured area (urban, forest edges). <span class="hl-green">Low standard deviation</span> indicates a smooth, homogeneous area (water, bare soil). Essential for texture analysis and land-cover mapping.`
+            },
+            majority: {
+                label: 'Majority Filter',
+                tag: 'Classification',
+                desc: 'Finds the most common category in the neighborhood. Cleans classified rasters.',
+                use: 'Land-use smoothing, classification refinement, removing isolated pixels.',
+                weights: [
+                    [1, 1, 1],
+                    [1, 1, 1],
+                    [1, 1, 1]
+                ],
+                compute: (n) => {
+                    const vals = n.flat();
+                    const freq = {};
+                    vals.forEach(v => { freq[v] = (freq[v] || 0) + 1; });
+                    let maxCount = 0,
+                        mode = vals[0];
+                    for (const [k, v] of Object.entries(freq)) {
+                        if (v > maxCount) { maxCount = v;
+                            mode = Number(k); }
+                    }
+                    return mode;
+                },
+                explain: (n, result) => {
+                    const vals = n.flat();
+                    const freq = {};
+                    vals.forEach(v => { freq[v] = (freq[v] || 0) + 1; });
+                    const parts = Object.entries(freq).map(([k, v]) => `${k}:${v}`);
+                    return `1. Counts: ${parts.join(', ')} &nbsp; 2. Most frequent = <span class="hl">${result}</span>`;
+                },
+                matrixDetail: (n, result) => {
+                    const vals = n.flat();
+                    const freq = {};
+                    vals.forEach(v => { freq[v] = (freq[v] || 0) + 1; });
+                    const entries = Object.entries(freq);
+                    const sorted = entries.sort((a, b) => b[1] - a[1]);
+                    return {
+                        steps: [
+                            `Frequency: ${entries.map(([k,v])=>`${k}:${v}`).join(', ')}`,
+                            `Most common = <span class="hl">${sorted[0][0]}</span> (appears ${sorted[0][1]} times)`,
+                            `Result = <span class="hl">${sorted[0][0]}</span> (mode)`
+                        ]
+                    };
+                },
+                longDesc: `The <strong>Majority Filter</strong> finds the most common value (mode) in the neighborhood. It is used on <span class="hl-orange">categorical raster data</span> (like land-use maps) to remove isolated pixels and create more homogeneous regions. This cleans up classification results by replacing noisy pixels with the dominant class of their neighbors.`
+            },
+            minority: {
+                label: 'Minority Filter',
+                tag: 'Rare Features',
+                desc: 'Finds the least common value in the neighborhood. Detects rare / unique features.',
+                use: 'Outlier detection, rare land-cover types, anomaly spotting.',
+                weights: [
+                    [1, 1, 1],
+                    [1, 1, 1],
+                    [1, 1, 1]
+                ],
+                compute: (n) => {
+                    const vals = n.flat();
+                    const freq = {};
+                    vals.forEach(v => { freq[v] = (freq[v] || 0) + 1; });
+                    let minCount = Infinity,
+                        rarest = vals[0];
+                    for (const [k, v] of Object.entries(freq)) {
+                        if (v < minCount) { minCount = v;
+                            rarest = Number(k); }
+                    }
+                    return rarest;
+                },
+                explain: (n, result) => {
+                    const vals = n.flat();
+                    const freq = {};
+                    vals.forEach(v => { freq[v] = (freq[v] || 0) + 1; });
+                    const parts = Object.entries(freq).map(([k, v]) => `${k}:${v}`);
+                    return `1. Counts: ${parts.join(', ')} &nbsp; 2. Least frequent = <span class="hl">${result}</span>`;
+                },
+                matrixDetail: (n, result) => {
+                    const vals = n.flat();
+                    const freq = {};
+                    vals.forEach(v => { freq[v] = (freq[v] || 0) + 1; });
+                    const entries = Object.entries(freq);
+                    const sorted = entries.sort((a, b) => a[1] - b[1]);
+                    return {
+                        steps: [
+                            `Frequency: ${entries.map(([k,v])=>`${k}:${v}`).join(', ')}`,
+                            `Least common = <span class="hl">${sorted[0][0]}</span> (appears ${sorted[0][1]} times)`,
+                            `Result = <span class="hl">${sorted[0][0]}</span> (rarest)`
+                        ]
+                    };
+                },
+                longDesc: `The <strong>Minority Filter</strong> finds the least common value (rarest category) in the neighborhood. It is useful for <span class="hl-orange">detecting outliers or rare features</span> in categorical rasters. For example, it can highlight isolated urban pixels in a forest or rare vegetation types. It helps identify anomalies and unique spatial patterns.`
+            },
+            edge: {
+                label: 'Edge Detection',
+                tag: 'Boundary',
+                desc: 'Measures the rate of change using a Sobel operator. Highlights boundaries.',
+                use: 'Road extraction, urban boundary detection, feature extraction.',
+                weights: [
+                    [-1, 0, 1],
+                    [-2, 0, 2],
+                    [-1, 0, 1]
+                ],
+                compute: (n) => {
+                    const Gx = [
+                        [-1, 0, 1],
+                        [-2, 0, 2],
+                        [-1, 0, 1]
+                    ];
+                    const Gy = [
+                        [-1, -2, -1],
+                        [0, 0, 0],
+                        [1, 2, 1]
+                    ];
+                    let sx = 0,
+                        sy = 0;
+                    for (let r = 0; r < 3; r++)
+                        for (let c = 0; c < 3; c++) {
+                            sx += n[r][c] * Gx[r][c];
+                            sy += n[r][c] * Gy[r][c];
+                        }
+                    return +Math.sqrt(sx * sx + sy * sy).toFixed(2);
+                },
+                explain: (n, result) => {
+                    const Gx = [
+                        [-1, 0, 1],
+                        [-2, 0, 2],
+                        [-1, 0, 1]
+                    ];
+                    const Gy = [
+                        [-1, -2, -1],
+                        [0, 0, 0],
+                        [1, 2, 1]
+                    ];
+                    let sx = 0,
+                        sy = 0;
+                    for (let r = 0; r < 3; r++)
+                        for (let c = 0; c < 3; c++) {
+                            sx += n[r][c] * Gx[r][c];
+                            sy += n[r][c] * Gy[r][c];
+                        }
+                    return `1. Gx = ${sx.toFixed(1)}, Gy = ${sy.toFixed(1)} &nbsp; 2. sqrt(Gx^2+Gy^2) = <span class="hl">${result}</span>`;
+                },
+                matrixDetail: (n, result) => {
+                    const Gx = [
+                        [-1, 0, 1],
+                        [-2, 0, 2],
+                        [-1, 0, 1]
+                    ];
+                    const Gy = [
+                        [-1, -2, -1],
+                        [0, 0, 0],
+                        [1, 2, 1]
+                    ];
+                    let sx = 0,
+                        sy = 0;
+                    for (let r = 0; r < 3; r++)
+                        for (let c = 0; c < 3; c++) {
+                            sx += n[r][c] * Gx[r][c];
+                            sy += n[r][c] * Gy[r][c];
+                        }
+                    return {
+                        steps: [
+                            `Gx = ${sx.toFixed(2)}, Gy = ${sy.toFixed(2)}`,
+                            `Gradient magnitude = sqrt(${sx.toFixed(2)}^2 + ${sy.toFixed(2)}^2)`,
+                            `Result = <span class="hl">${result}</span> (high = edge)`
+                        ]
+                    };
+                },
+                longDesc: `The <strong>Edge Detection Filter</strong> uses the Sobel operator to compute the gradient magnitude — the rate of change in the neighborhood. <span class="hl-orange">High values indicate strong boundaries</span> where values change rapidly (roads, rivers, urban edges). Low values indicate flat, homogeneous areas. Essential for feature extraction and boundary mapping in remote sensing.`
+            },
+            highpass: {
+                label: 'High-Pass Filter',
+                tag: 'Sharpening',
+                desc: 'Enhances differences by amplifying high-frequency components. Sharpens the image.',
+                use: 'Feature enhancement, road detection, edge sharpening, urban mapping.',
+                weights: [
+                    [-1, -1, -1],
+                    [-1, 9, -1],
+                    [-1, -1, -1]
+                ],
+                compute: (n) => {
+                    let sum = 0;
+                    const w = [
+                        [-1, -1, -1],
+                        [-1, 9, -1],
+                        [-1, -1, -1]
+                    ];
+                    for (let r = 0; r < 3; r++)
+                        for (let c = 0; c < 3; c++) {
+                            sum += n[r][c] * w[r][c];
+                        }
+                    return +sum.toFixed(2);
+                },
+                explain: (n, result) => {
+                    return `1. Kernel: center=9, others=-1 &nbsp; 2. Weighted sum = <span class="hl">${result}</span>`;
+                },
+                matrixDetail: (n, result) => {
+                    const w = [
+                        [-1, -1, -1],
+                        [-1, 9, -1],
+                        [-1, -1, -1]
+                    ];
+                    let sum = 0;
+                    for (let r = 0; r < 3; r++)
+                        for (let c = 0; c < 3; c++) {
+                            sum += n[r][c] * w[r][c];
+                        }
+                    return {
+                        steps: [
+                            `Kernel: center=9, others=-1 (amplifies center)`,
+                            `Weighted sum = ${sum.toFixed(2)}`,
+                            `Result = <span class="hl">${result}</span> (sharpened value)`
+                        ]
+                    };
+                },
+                longDesc: `The <strong>High-Pass Filter</strong> amplifies high-frequency components (edges and fine details) while suppressing low-frequency information. The kernel has a <span class="hl-orange">strong positive weight at the center</span> and negative weights around it, emphasizing the difference between the center and its neighbors. This sharpens the image and enhances features like roads, buildings, and boundaries.`
+            },
+            lowpass: {
+                label: 'Low-Pass Filter',
+                tag: 'Smoothing',
+                desc: 'Reduces high-frequency noise by averaging. Smooths the image.',
+                use: 'Noise reduction, generalization, pre-processing for classification.',
+                weights: [
+                    [1, 1, 1],
+                    [1, 1, 1],
+                    [1, 1, 1]
+                ],
+                compute: (n) => {
+                    const vals = n.flat();
+                    return +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
+                },
+                explain: (n, result) => {
+                    const vals = n.flat();
+                    const sum = vals.reduce((a, b) => a + b, 0);
+                    const len = vals.length;
+                    return `1. Uniform kernel &nbsp; 2. ${sum} / ${len} = <span class="hl">${result}</span>`;
+                },
+                matrixDetail: (n, result) => {
+                    const vals = n.flat();
+                    const sum = vals.reduce((a, b) => a + b, 0);
+                    const len = vals.length;
+                    return {
+                        steps: [
+                            `Uniform weights: all 1s (average)`,
+                            `Sum = ${sum}, count = ${len}`,
+                            `Result = <span class="hl">${result}</span> (smoothed)`
+                        ]
+                    };
+                },
+                longDesc: `The <strong>Low-Pass Filter</strong> suppresses high-frequency noise and sharp transitions, producing a smoother output. It uses a <span class="hl-green">uniform kernel</span> that averages the neighborhood, similar to the mean filter. The result is a generalized surface with reduced detail, useful for removing noise before classification or for creating a base layer for further analysis.`
+            }
+        };
+
+        // ─────────────────────────────────────────────────────────────────────
+        //  STATE
+        // ─────────────────────────────────────────────────────────────────────
+        let selectedRow = -1;
+        let selectedCol = -1;
+        let currentFilter = 'mean';
+
+        // ─────────────────────────────────────────────────────────────────────
+        //  RENDER GRID
+        // ─────────────────────────────────────────────────────────────────────
+        const gridEl = document.getElementById('rasterGrid');
+
+        function getValueClass(val) {
+            return 'cell-val-' + Math.min(10, Math.max(0, Math.round(val)));
+        }
+
+        function renderGrid() {
+            gridEl.style.gridTemplateColumns = `repeat(${COLS}, 48px)`;
+            gridEl.style.gridTemplateRows = `repeat(${ROWS}, 48px)`;
+            gridEl.innerHTML = '';
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const val = GRID[r][c];
+                    const cell = document.createElement('div');
+                    cell.className = 'cell ' + getValueClass(val);
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    const fits = (r > 0 && r < ROWS - 1 && c > 0 && c < COLS - 1);
+                    if (!fits) cell.classList.add('border-cell');
+                    const span = document.createElement('span');
+                    span.className = 'cell-value';
+                    span.textContent = val;
+                    cell.appendChild(span);
+                    cell.addEventListener('click', () => onCellClick(r, c));
+                    gridEl.appendChild(cell);
+                }
+            }
+            updateSelection();
+        }
+
+        function updateSelection() {
+            const cells = gridEl.querySelectorAll('.cell');
+            cells.forEach(el => {
+                const r = parseInt(el.dataset.row),
+                    c = parseInt(el.dataset.col);
+                el.classList.remove('selected', 'in-neighborhood');
+                if (selectedRow >= 0 && selectedCol >= 0) {
+                    const sel = (r === selectedRow && c === selectedCol);
+                    const near = (Math.abs(r - selectedRow) <= 1 && Math.abs(c - selectedCol) <= 1);
+                    if (sel) el.classList.add('selected');
+                    else if (near && !el.classList.contains('border-cell')) el.classList.add('in-neighborhood');
+                }
+            });
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        //  CLICK
+        // ─────────────────────────────────────────────────────────────────────
+        function onCellClick(row, col) {
+            const fits = (row > 0 && row < ROWS - 1 && col > 0 && col < COLS - 1);
+            if (!fits) {
+                document.getElementById('resultValue').textContent = 'X';
+                document.getElementById('resultDetail').innerHTML = '<span class="result-empty">Edge cell — click an interior cell.</span>';
+                document.getElementById('neighborValues').innerHTML = '<span style="color:var(--slate-dim);font-size:12px;">—</span>';
+                document.getElementById('matrixWorkContent').innerHTML =
+                    '<div style="color:var(--slate-dim);font-size:13px;padding:6px 0;">Click an interior cell to see the matrix calculation.</div>';
+                document.getElementById('feBody').innerHTML =
+                    '<span style="color:var(--slate-dim);">Click an interior cell to see the filter explanation.</span>';
+                selectedRow = -1;
+                selectedCol = -1;
+                updateSelection();
+                return;
+            }
+            selectedRow = row;
+            selectedCol = col;
+            updateSelection();
+            computeAndDisplay(row, col);
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        //  COMPUTE & DISPLAY
+        // ─────────────────────────────────────────────────────────────────────
+        function computeAndDisplay(row, col) {
+            const neighbors = [];
+            for (let r = row - 1; r <= row + 1; r++) {
+                const rowVals = [];
+                for (let c = col - 1; c <= col + 1; c++) rowVals.push(GRID[r][c]);
+                neighbors.push(rowVals);
+            }
+
+            const filter = FILTERS[currentFilter];
+            const result = filter.compute(neighbors);
+
+            // Result
+            document.getElementById('resultValue').textContent = result;
+            const detailHtml = filter.explain(neighbors, result);
+            document.getElementById('resultDetail').innerHTML = detailHtml;
+
+            // Neighborhood
+            const nvEl = document.getElementById('neighborValues');
+            let html = '';
+            for (let r = 0; r < 3; r++)
+                for (let c = 0; c < 3; c++) {
+                    const val = neighbors[r][c];
+                    const cls = (r === 1 && c === 1) ? 'nval center-n' : 'nval';
+                    html += `<span class="${cls}">${val}</span>`;
+                }
+            nvEl.innerHTML = html;
+
+            // Matrix work
+            document.getElementById('matrixWorkContent').innerHTML = buildMatrixWork(neighbors, currentFilter, result);
+
+            // Filter explanation
+            document.getElementById('feTitle').innerHTML =
+                `Filter Deep Dive <span class="tag" id="feTag">${filter.tag}</span>`;
+            document.getElementById('feBody').innerHTML = filter.longDesc +
+                `<br><br><span style="font-size:12px;color:var(--slate-dim);">Use case: ${filter.use}</span>` +
+                `<br><span style="font-size:12px;color:var(--slate-dim);">Formula: ${filter.desc}</span>`;
+
+            // Kernel display
+            renderKernel(currentFilter);
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        //  BUILD MATRIX WORK
+        // ─────────────────────────────────────────────────────────────────────
+        function buildMatrixWork(neighbors, filterKey, result) {
+            const filter = FILTERS[filterKey];
+            const w = filter.weights;
+            const detail = filter.matrixDetail(neighbors, result);
+
+            function renderNeighborGrid() {
+                let h = `<div class="mw-grid">`;
+                for (let r = 0; r < 3; r++) {
+                    for (let c = 0; c < 3; c++) {
+                        const val = neighbors[r][c];
+                        const cls = (r === 1 && c === 1) ? 'mw-cell center-mw' : 'mw-cell';
+                        h += `<div class="${cls}">${val}</div>`;
+                    }
+                }
+                h += '</div>';
+                return h;
+            }
+
+            function renderKernelGrid() {
+                let h = `<div class="mw-grid">`;
+                for (let r = 0; r < 3; r++) {
+                    for (let c = 0; c < 3; c++) {
+                        const val = w[r][c];
+                        let cls = 'mw-cell';
+                        if (r === 1 && c === 1) cls += ' center-mw';
+                        else if (val < 0) cls += ' weight-mw';
+                        else if (val === 0) cls += ' zero-mw';
+                        h += `<div class="${cls}">${val}</div>`;
+                    }
+                }
+                h += '</div>';
+                return h;
+            }
+
+            // Build steps HTML
+            let stepsHtml = '';
+            detail.steps.forEach((s, i) => {
+                stepsHtml += `<div class="op-line">${i + 1}. ${s}</div>`;
+            });
+
+            return `
+            <div class="mw-layout">
+              <div class="mw-matrix">
+                <div class="mw-label">Neighborhood</div>
+                ${renderNeighborGrid()}
+              </div>
+              <div class="mw-arrow">-></div>
+              <div class="mw-matrix">
+                <div class="mw-label">Kernel (${filter.label})</div>
+                ${renderKernelGrid()}
+              </div>
+              <div class="mw-arrow">-></div>
+              <div class="mw-op-block">
+                ${stepsHtml}
+              </div>
+              <div class="mw-arrow">-></div>
+              <div style="text-align:center;min-width:50px;">
+                <div style="font-size:10px;color:var(--slate-dim);text-transform:uppercase;letter-spacing:0.05em;">Result</div>
+                <div class="mw-result-highlight">${result}</div>
+              </div>
+            </div>
+          `;
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        //  RENDER KERNEL (top small display)
+        // ─────────────────────────────────────────────────────────────────────
+        function renderKernel(filterKey) {
+            const filter = FILTERS[filterKey];
+            const w = filter.weights;
+            const grid = document.getElementById('kernelGrid');
+            grid.innerHTML = '';
+            for (let r = 0; r < 3; r++) {
+                for (let c = 0; c < 3; c++) {
+                    const div = document.createElement('div');
+                    div.className = 'kcell';
+                    if (r === 1 && c === 1) div.classList.add('center-k');
+                    const val = w[r][c];
+                    let display = val;
+                    if (val === 0) display = '0';
+                    else if (val === -1) display = '-1';
+                    else if (val === -2) display = '-2';
+                    else if (val === 2) display = '2';
+                    else if (val === 9) display = '9';
+                    else display = val;
+                    div.textContent = display;
+                    if (val < 0) div.classList.add('weighted');
+                    else if (val === 0) div.classList.add('zero-k');
+                    grid.appendChild(div);
+                }
+            }
+            document.getElementById('kernelName').textContent = filter.label;
+            document.getElementById('kernelDescription').textContent = filter.desc;
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        //  FILTER SELECTOR
+        // ─────────────────────────────────────────────────────────────────────
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                renderKernel(currentFilter);
+
+                // Update explanation with filter info (no cell selected yet)
+                const filter = FILTERS[currentFilter];
+                document.getElementById('feTitle').innerHTML =
+                    `Filter Deep Dive <span class="tag" id="feTag">${filter.tag}</span>`;
+                document.getElementById('feBody').innerHTML =
+                    `${filter.longDesc}<br><br><span style="font-size:12px;color:var(--slate-dim);">Use case: ${filter.use}</span><br><span style="font-size:12px;color:var(--slate-dim);">Formula: ${filter.desc}</span>`;
+
+                if (selectedRow >= 0 && selectedCol >= 0) {
+                    const fits = (selectedRow > 0 && selectedRow < ROWS - 1 && selectedCol > 0 && selectedCol < COLS - 1);
+                    if (fits) computeAndDisplay(selectedRow, selectedCol);
+                } else {
+                    document.getElementById('resultValue').textContent = '—';
+                    document.getElementById('resultDetail').innerHTML = '<span class="result-empty">Click a cell on the grid.</span>';
+                    document.getElementById('neighborValues').innerHTML =
+                        '<span style="color:var(--slate-dim);font-size:12px;">—</span>';
+                    document.getElementById('matrixWorkContent').innerHTML =
+                        '<div style="color:var(--slate-dim);font-size:13px;padding:6px 0;">Click an interior cell to see the matrix calculation.</div>';
+                }
+            });
+        });
+
+        // ─────────────────────────────────────────────────────────────────────
+        //  INIT
+        // ─────────────────────────────────────────────────────────────────────
+        renderGrid();
+        renderKernel('mean');
+
+        // Auto-select center cell after a short delay
+        setTimeout(() => {
+            const centerR = Math.floor(ROWS / 2);
+            const centerC = Math.floor(COLS / 2);
+            onCellClick(centerR, centerC);
+        }, 500);
+
+        console.log('Focal Operations — Complete Filter Guide loaded (symbols removed).');
+        console.log('11 filters: Mean, Median, Max, Min, Range, StdDev, Majority, Minority, Edge, High-Pass, Low-Pass');
+    </script>
+
+</body>
+</html>
